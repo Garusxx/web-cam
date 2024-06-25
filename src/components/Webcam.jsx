@@ -2,8 +2,6 @@ import React, { useRef, useEffect, useState } from "react";
 import * as tf from "@tensorflow/tfjs";
 import * as cocossd from "@tensorflow-models/coco-ssd";
 
-import { drawRect } from "../utilities/Draw";
-
 import "../App.css";
 
 const Webcam = () => {
@@ -16,7 +14,7 @@ const Webcam = () => {
     console.log("Coco model loaded.");
     setInterval(() => {
       detect(net);
-    }, 10000);
+    }, 8000);
   };
 
   const detect = async (net) => {
@@ -29,8 +27,12 @@ const Webcam = () => {
       // Aktualizacja stanu z wykrytymi obiektami
       setDetectedObjects(
         obj.map((detection) => ({
-          ...detection.bbox,
+          x: detection.bbox[0],
+          y: detection.bbox[1],
+          width: detection.bbox[2],
+          height: detection.bbox[3],
           class: detection.class,
+          score: detection.score, 
         }))
       );
 
@@ -74,22 +76,23 @@ const Webcam = () => {
       <div>
         <video ref={videoRef} autoPlay playsInline muted className="camView" />
         <div style={{ position: "relative" }}>
-          {detectedObjects.map((obj, index) => (
+          {detectedObjects.filter(obj => obj.score > 0.66).map((obj, index) => (
             <div
               key={index}
               style={{
                 position: "absolute",
                 border: "2px solid red",
-                left: `${obj[0]}px`,
-                top: `${obj[1]}px`,
-                width: `${obj[2]}px`,
-                height: `${obj[3]}px`,
+                left: `${obj.x}px`, // Zmiana na obj.x
+                top: `${obj.y}px`, // Zmiana na obj.y
+                width: `${obj.width}px`, // Zmiana na obj.width
+                height: `${obj.height}px`, // Zmiana na obj.height
                 color: "red",
                 fontWeight: "bold",
                 fontSize: "14px",
               }}
             >
               {obj.class}
+              {obj.score && <span> ({Math.round(obj.score * 100)}%)</span>}
             </div>
           ))}
         </div>
